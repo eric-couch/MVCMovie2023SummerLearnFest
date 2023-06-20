@@ -20,11 +20,29 @@ namespace MVCMovie2023SummerLearnFest.Controllers
         }
 
         // GET: Movies
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-              return _context.Movie != null ? 
-                          View(await _context.Movie.ToListAsync()) :
-                          Problem("Entity set 'MVCMovieContext.Movie'  is null.");
+            if (_context.Movie == null)
+            {
+                return Problem("Entity set 'MVCMovieContext.Movie'  is null.");
+            }
+
+            var movies = from m in _context.Movie
+                         select m;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                movies = movies.Where(s => s.Title!.Contains(searchString));
+            }
+
+            return View(await movies.ToListAsync());
+            
+        }
+
+        [HttpPost]
+        public string Index(string searchString, bool notUsed)
+        {
+            return $"From [HttpPost]Index: filter on {searchString}";
         }
 
         // GET: Movies/Details/5
@@ -68,6 +86,7 @@ namespace MVCMovie2023SummerLearnFest.Controllers
         }
 
         // GET: Movies/Edit/5
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Movie == null)
@@ -86,6 +105,9 @@ namespace MVCMovie2023SummerLearnFest.Controllers
         // POST: Movies/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // sql injection
+        // xss cross site scripting
+        // csrf/xsrf cross site request forgery
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,ReleaseDate,Genre,Price")] Movie movie)
